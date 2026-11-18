@@ -1,0 +1,13 @@
+feature,VIF
+distance_m,1.0359288390017294
+projection_fraction,1.0011788052112736
+segment_length_m,1.0458592102618862
+gps_speed_mps,4.809519890904493
+gps_displacement_m,4.770397581288344
+time_gap_s,1.0121719935799305
+heading_difference,1.0020374931697296
+gps_bearing_sin,1.025804970992863
+gps_bearing_cos,1.0033420725610511
+segment_bearing_sin,1.0013816757365492
+segment_bearing_cos,1.002314237825625
+gps_bearing_missing,1.0001768266767128

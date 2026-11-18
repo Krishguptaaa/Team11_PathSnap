@@ -1,0 +1,13 @@
+selected_feature
+distance_m
+projection_fraction
+segment_length_m
+gps_speed_mps
+gps_displacement_m
+time_gap_s
+heading_difference
+gps_bearing_sin
+gps_bearing_cos
+segment_bearing_sin
+segment_bearing_cos
+gps_bearing_missing

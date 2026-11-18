@@ -1,0 +1,14 @@
+,variance
+gps_speed_missing,0.0004997524987624941
+gps_bearing_missing,0.0005147373486867435
+projection_fraction,0.21870586614953338
+segment_bearing_cos,0.44683753822598415
+gps_bearing_cos,0.4982732486210505
+gps_bearing_sin,0.4995442207423337
+segment_bearing_sin,0.5531543631458612
+time_gap_s,57.21374299503484
+gps_speed_mps,125.19890124878066
+gps_displacement_m,154.89508968169744
+heading_difference,3269.0857076617567
+distance_m,27096.40311873185
+segment_length_m,36883.43052949305

@@ -1,0 +1,16 @@
+,missing_count,missing_percentage
+trip_id,0,0.0
+gps_index,0,0.0
+timestamp,0,0.0
+candidate_rank,0,0.0
+arc_id,0,0.0
+distance_m,0,0.0
+gps_speed_mps,100,0.05
+gps_displacement_m,100,0.05
+time_gap_s,100,0.05
+gps_bearing,103,0.052
+segment_length_m,0,0.0
+segment_bearing,0,0.0
+heading_difference,103,0.052
+projection_distance_m,0,0.0
+projection_fraction,0,0.0
