@@ -1,47 +1,81 @@
-
+# ==========================================
 # Python
+# ==========================================
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
 *.so
 
-# Virtual environments
+# ==========================================
+# Virtual Environments
+# ==========================================
 venv/
 .venv/
 env/
 
-# Jupyter
+# ==========================================
+# Jupyter Notebook
+# ==========================================
 .ipynb_checkpoints/
 
-# IDEs
+# ==========================================
+# IDEs and Editors
+# ==========================================
 .vscode/
 .idea/
 
-# OS files
+# ==========================================
+# Operating System Files
+# ==========================================
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# Environment variables and secrets
+# ==========================================
+# Environment Variables and Secrets
+# ==========================================
 .env
 .env.*
 !.env.example
 
-# Raw dataset - do not upload
+# ==========================================
+# Raw Dataset - Do Not Upload
+# ==========================================
 Student folder/
 data/raw/
 data/train/
 data/test/
 data/evaluator/
 
-# Generated processed data
+# ==========================================
+# Generated Processed Data
+# ==========================================
 data/processed/
-outputs/
 
+# ==========================================
+# Model Outputs - Keep Selected Results
+# ==========================================
+
+# Ignore saved model binaries
+outputs/model_results/saved_models/
+
+# Ignore temporary model files
+outputs/model_results/*.pkl
+outputs/model_results/*.joblib
+
+# Keep evaluation results
+!outputs/
+!outputs/feature_selection/
+!outputs/model_results/
+
+# ==========================================
 # Logs
+# ==========================================
 *.log
 
-# Temporary files
+# ==========================================
+# Temporary Files
+# ==========================================
 *.tmp
 *.bak
