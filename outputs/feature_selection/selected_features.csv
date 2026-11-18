@@ -10,4 +10,4 @@ gps_bearing_sin
 gps_bearing_cos
 segment_bearing_sin
 segment_bearing_cos
-gps_bearing_missing
+gps_speed_missing

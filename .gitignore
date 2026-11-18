@@ -1,0 +1,47 @@
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Raw dataset - do not upload
+Student folder/
+data/raw/
+data/train/
+data/test/
+data/evaluator/
+
+# Generated processed data
+data/processed/
+outputs/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
