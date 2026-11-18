@@ -1,0 +1,2 @@
+trip_id,number_of_nodes,number_of_edges,weakly_connected_components,largest_component_size,isolated_nodes,average_in_degree,average_out_degree
+00000001,88809,165498,175,86854,0,1.8635273452014998,1.8635273452014998
