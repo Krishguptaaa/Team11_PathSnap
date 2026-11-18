@@ -427,14 +427,27 @@ python -m src.hmm.run_pipeline
 By default, this processes only Trips 5, 13 and 16. A different explicit
 subset can be supplied with `--trip-ids`, for example
 `python -m src.hmm.run_pipeline --trip-ids 5 13 16`. It does not start the
-remaining validation trips or the student/evaluator testing partitions.
+remaining validation trips.
 Outputs are written under `outputs/hmm_results/`, with per-trip evaluation
 files and a `pilot_batch_summary.csv` under `outputs/hmm_results/evaluation/`.
 
+The designated ten-trip student-test partition can be evaluated separately
+with the already-trained model:
+
+```powershell
+python -m src.hmm.run_pipeline --partition student_test
+```
+
+This prepares that partition's candidate features and route alignments from
+`Student folder/student_test/` and writes its aggregate summary to
+`outputs/hmm_results/evaluation/student_test_hmm_summary.csv`. It does not
+retrain the classifier or access the evaluator-testing partition.
+
 The monotonic-alignment arc labels used for evaluation are provisional,
 route-derived references rather than independently verified ground truth.
-Results should be described with this limitation; the evaluator-testing
-partition must not be used for parameter selection.
+Results should be described with this limitation; the student-test partition
+should be used only as specified by project guidelines, and the
+evaluator-testing partition must not be used for parameter selection.
 
 ## 10. Installation and Execution
 
@@ -521,6 +534,12 @@ alignment/feature files are available:
 
 ```powershell
 python -m src.hmm.run_pipeline
+```
+
+To run the separate ten-trip student-test evaluation, use:
+
+```powershell
+python -m src.hmm.run_pipeline --partition student_test
 ```
 
 ## 11. Future Improvements

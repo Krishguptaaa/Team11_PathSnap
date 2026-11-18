@@ -98,11 +98,18 @@ def haversine_m(lat1, lon1, lat2, lon2):
 # 4. FIND TRIP DIRECTORY
 # ============================================================
 
-def find_trip_directory(trip_id):
+def find_trip_directory(trip_id, partition="train"):
 
     trip_name = f"{int(trip_id):08d}"
 
-    trip_directory = TRAIN_DIR / trip_name
+    partition_dirs = {
+        "train": TRAIN_DIR,
+        "student_test": DATA_ROOT / "student_test",
+    }
+    if partition not in partition_dirs:
+        raise ValueError(f"Unsupported data partition: {partition}")
+
+    trip_directory = partition_dirs[partition] / trip_name
 
     if not trip_directory.exists():
 
@@ -996,7 +1003,7 @@ def print_summary(
 # 12. MAIN
 # ============================================================
 
-def main(trip_id=TRIP_ID):
+def main(trip_id=TRIP_ID, partition="train"):
 
     global START_TIME
 
@@ -1010,9 +1017,7 @@ def main(trip_id=TRIP_ID):
     # Find trip
     # --------------------------------------------------------
 
-    trip_directory = find_trip_directory(
-        trip_id
-    )
+    trip_directory = find_trip_directory(trip_id, partition)
 
     # --------------------------------------------------------
     # Load graph

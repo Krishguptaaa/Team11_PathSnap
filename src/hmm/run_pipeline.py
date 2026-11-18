@@ -1,5 +1,6 @@
-"""Run the HMM map-matching pipeline on a deliberately small trip batch."""
+"""Run HMM map matching on selected training or student-test trips."""
 
+from .. import batch_alignment
 import argparse
 import gc
 import time
@@ -7,6 +8,10 @@ from pathlib import Path
 
 import pandas as pd
 
+from .. import batch_alignment
+from .. import batch_feature_extraction
+from .. import candidate_generation
+from .. import feature_extraction
 from . import emission_probabilities
 from . import evaluate_viterbi
 from . import transition_probabilities
@@ -18,6 +23,12 @@ HMM_DIR = ROOT / "outputs" / "hmm_results"
 EVALUATION_DIR = HMM_DIR / "evaluation"
 SUMMARY_PATH = EVALUATION_DIR / "pilot_batch_summary.csv"
 PILOT_TRIPS = (5, 13, 16)
+STUDENT_TEST_TRIPS = (0, 7, 9, 40, 52, 56, 65, 76, 77, 91)
+STUDENT_TEST_DIR = (
+    Path(r"C:\Users\Krishitha\OneDrive\Desktop\Student folder")
+    / "student_test"
+)
+PROCESSED_DIR = ROOT / "data" / "processed"
 
 
 def _trip_output_files(trip_id):
@@ -33,7 +44,40 @@ def _trip_output_files(trip_id):
     ]
 
 
-def process_trip(trip_id, model, model_load_seconds):
+def prepare_student_test_trip(trip_id):
+    trip_name = f"{trip_id:08d}"
+    track, nodes, arcs = candidate_generation.load_trip(
+        trip_name,
+        data_dir=STUDENT_TEST_DIR,
+    )
+
+    candidates = batch_feature_extraction.generate_candidates(
+        trip_name,
+        track,
+        nodes,
+        arcs,
+    )
+    candidate_path = PROCESSED_DIR / f"trip_{trip_name}_candidates.csv"
+    candidates.to_csv(candidate_path, index=False)
+
+    features = feature_extraction.extract_features(
+        trip_name,
+        track,
+        nodes,
+        arcs,
+        candidates,
+    )
+    feature_path = PROCESSED_DIR / f"trip_{trip_name}_features.csv"
+    features.to_csv(feature_path, index=False)
+    del candidates, features
+
+    batch_alignment.process_trip(
+        trip_name,
+        data_dir=STUDENT_TEST_DIR,
+    )
+
+
+def process_trip(trip_id, model, model_load_seconds, partition="train"):
     trip_name = f"{trip_id:08d}"
     started = time.perf_counter()
 
@@ -45,7 +89,7 @@ def process_trip(trip_id, model, model_load_seconds):
     candidate_count = len(emissions)
     del emissions
 
-    transition_probabilities.main(trip_id)
+    transition_probabilities.main(trip_id, partition=partition)
     viterbi.main(trip_id)
     summary, comparison = evaluate_viterbi.evaluate_trip(trip_id)
 
@@ -94,7 +138,7 @@ def process_trip(trip_id, model, model_load_seconds):
     return summary, comparison, quality
 
 
-def build_aggregate_summary(comparisons, qualities):
+def build_aggregate_summary(comparisons, qualities, partition):
     comparison = pd.concat(comparisons, ignore_index=True)
     valid = comparison.dropna(
         subset=[
@@ -130,7 +174,7 @@ def build_aggregate_summary(comparisons, qualities):
             valid["distance_to_aligned_arc_m"]
         )
         rows.append({
-            "trip_id": "ALL_PILOT_TRIPS",
+            "trip_id": f"ALL_{partition.upper()}",
             "method": method,
             "evaluation_observations": len(valid),
             **metrics,
@@ -167,13 +211,20 @@ def build_aggregate_summary(comparisons, qualities):
                 else float("nan")
             ),
         })
-
     return pd.DataFrame(rows)
 
 
-def run(trip_ids):
+def run(trip_ids, partition="train"):
     HMM_DIR.mkdir(parents=True, exist_ok=True)
     EVALUATION_DIR.mkdir(parents=True, exist_ok=True)
+
+    if partition == "student_test":
+        unexpected = set(trip_ids) - set(STUDENT_TEST_TRIPS)
+        if unexpected:
+            raise ValueError(
+                "Only designated student-test trip IDs can be processed "
+                f"from this partition: {sorted(unexpected)}"
+            )
 
     model_started = time.perf_counter()
     model = emission_probabilities.load_random_forest()
@@ -183,24 +234,45 @@ def run(trip_ids):
     comparisons = []
     qualities = []
     for trip_id in trip_ids:
+        trip_started = time.perf_counter()
+        preparation_seconds = 0.0
+        if partition == "student_test":
+            preparation_started = time.perf_counter()
+            prepare_student_test_trip(trip_id)
+            preparation_seconds = (
+                time.perf_counter() - preparation_started
+            )
         summary, comparison, quality = process_trip(
             trip_id,
             model,
             model_load_seconds,
+            partition=partition,
         )
+        summary["input_preparation_seconds"] = preparation_seconds
+        summary["runtime_seconds"] = time.perf_counter() - trip_started
         summaries.append(summary)
         comparisons.append(comparison)
         qualities.append(quality)
         gc.collect()
 
     per_trip_summary = pd.concat(summaries, ignore_index=True)
-    aggregate_summary = build_aggregate_summary(comparisons, qualities)
-    pd.concat(
+    aggregate_summary = build_aggregate_summary(
+        comparisons,
+        qualities,
+        partition,
+    )
+    summary_path = (
+        EVALUATION_DIR / "student_test_hmm_summary.csv"
+        if partition == "student_test"
+        else SUMMARY_PATH
+    )
+    result = pd.concat(
         [per_trip_summary, aggregate_summary],
         ignore_index=True,
-    ).to_csv(SUMMARY_PATH, index=False)
+    )
+    result.to_csv(summary_path, index=False)
 
-    print("\nPilot batch summary:")
+    print(f"\n{partition.replace('_', ' ').title()} batch summary:")
     print(per_trip_summary[
         [
             "trip_id",
@@ -215,7 +287,7 @@ def run(trip_ids):
             "output_size_mb",
         ]
     ].to_string(index=False, float_format=lambda value: f"{value:.4f}"))
-    print(f"\nAggregate summary saved to {SUMMARY_PATH}")
+    print(f"\nAggregate summary saved to {summary_path}")
 
 
 def main():
@@ -224,11 +296,24 @@ def main():
         "--trip-ids",
         nargs="+",
         type=int,
-        default=PILOT_TRIPS,
-        help="Trip IDs to process (defaults to the 5, 13, 16 pilot batch).",
+        default=None,
+        help="Trip IDs to process (partition-specific defaults are used).",
+    )
+    parser.add_argument(
+        "--partition",
+        choices=["train", "student_test"],
+        default="train",
+        help="Use training data (pilot) or the designated student-test trips.",
     )
     args = parser.parse_args()
-    run(args.trip_ids)
+    trip_ids = args.trip_ids
+    if trip_ids is None:
+        trip_ids = (
+            STUDENT_TEST_TRIPS
+            if args.partition == "student_test"
+            else PILOT_TRIPS
+        )
+    run(trip_ids, partition=args.partition)
 
 
 if __name__ == "__main__":
